@@ -1,103 +1,91 @@
 #!/usr/bin/python3
-"""N Queens
-n queens problem of placing n non-attacking queens on an n×n chessboard
-solution requires that no two queens share the same row, column, or diagonal
-"""
+'''N-Queens Challenge'''
+
 import sys
 
 
-def checkNqueensArgs(args):
-    """Check for validity of arguement of Nqueen
-    """
-    if len(args) != 2:
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
         print("Usage: nqueens N")
         sys.exit(1)
+
     try:
-        N = int(args[1])
-        if N < 4:
-            print("N must be at least 4")
-            sys.exit(1)
-    except Exception:
-        print("N must be a number")
-        sys.exit(1)
+        n = int(sys.argv[1])
+    except ValueError:
+        print('N must be a number')
+        exit(1)
 
-    return N
+    if n < 4:
+        print('N must be at least 4')
+        exit(1)
 
+    solutions = []
+    placed_queens = []  # coordinates format [row, column]
+    stop = False
+    r = 0
+    c = 0
 
-def display_board(board):
-    """Print board of NxN
-    """
-    for row in board:
-        print(str(row).replace(',', '').replace('\'', ''))
-    print()
+    # iterate thru rows
+    while r < n:
+        goback = False
+        # iterate thru columns
+        while c < n:
+            # check is current column is safe
+            safe = True
+            for cord in placed_queens:
+                col = cord[1]
+                if(col == c or col + (r-cord[0]) == c or
+                        col - (r-cord[0]) == c):
+                    safe = False
+                    break
 
+            if not safe:
+                if c == n - 1:
+                    goback = True
+                    break
+                c += 1
+                continue
 
-def nQueens(board):
-    """n queens problem of placing n non-attacking queens on an n×n
-    """
-    res = []
-    for i in range(len(board)):
-        temp = []
-        for j in range(len(board)):
-            if board[i][j] == 'Q':
-                temp.append(i)
-                temp.append(j)
-        res.append(temp)
-    print(res)
+            # place queen
+            cords = [r, c]
+            placed_queens.append(cords)
+            # if last row, append solution and reset all to last unfinished row
+            # and last safe column in that row
+            if r == n - 1:
+                solutions.append(placed_queens[:])
+                for cord in placed_queens:
+                    if cord[1] < n - 1:
+                        r = cord[0]
+                        c = cord[1]
+                for i in range(n - r):
+                    placed_queens.pop()
+                if r == n - 1 and c == n - 1:
+                    placed_queens = []
+                    stop = True
+                r -= 1
+                c += 1
+            else:
+                c = 0
+            break
+        if stop:
+            break
+        # on fail: go back to previous row
+        # and continue from last safe column + 1
+        if goback:
+            r -= 1
+            while r >= 0:
+                c = placed_queens[r][1] + 1
+                del placed_queens[r]  # delete previous queen coordinates
+                if c < n:
+                    break
+                r -= 1
+            if r < 0:
+                break
+            continue
+        r += 1
 
-
-def isSafe(board, row, col):
-    """Check if two queens threaten each other or not
-    """
-    # return False if two queen share the same column
-    for i in range(row):
-        if board[i][col] == 'Q':
-            return False
-
-    # return false if two queen share vertical diagonal
-    (i, j) = (row, col)
-    while i >= 0 and j >= 0:
-        if board[i][j] == 'Q':
-            return False
-        i -= 1
-        j -= 1
-
-    # return false if two queen share the same '/' diagonal
-    (i, j) = (row, col)
-    while i >= 0 and j < len(board):
-        if board[i][j] == 'Q':
-            return False
-        i -= 1
-        j += 1
-
-    return True
-
-
-def chessBoard(board, row):
-    """Create a ChessBoard of NxN
-    """
-    # if `N` queens are placed successfully, print the solution
-    if row == len(board):
-        nQueens(board)
-        return
-
-    # place queen at every square in the current row `r`
-    # and recur for each valid movement
-    for i in range(len(board)):
-        # if no two queens threaten each other
-        if isSafe(board, row, i):
-            # place queen on the current square
-            board[row][i] = 'Q'
-
-            # recur for the next row
-            chessBoard(board, row + 1)
-
-            #  backtrack and remove the queen from the current square\
-            board[row][i] = '*'
-
-
-if __name__ == "__main__":
-    N = checkNqueensArgs(sys.argv)
-    # Create board
-    board = [["*" for i in range(N)] for j in range(N)]
-    chessBoard(board, 0)
+    for idx, val in enumerate(solutions):
+        if idx == len(solutions) - 1:
+            print(val, end='')
+        else:
+            print(val)
